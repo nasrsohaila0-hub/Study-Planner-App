@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مُخطط الدراسة التفاعلي</title>
+    <style>
+        /* === تصميم CSS === */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .section {
+            background-color: #e9ecef;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            color: #0056b3;
+            border-bottom: 1px dashed #ced4da;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        /* تصميم حقل الإدخال */
+        #subjectInput, #examDate {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            width: 70%;
+            margin-left: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1e7e34;
+        }
+        /* تصميم الجدول الأسبوعي */
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            text-align: right;
+        }
+        .schedule-table th, .schedule-table td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+        }
+        .schedule-table th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .schedule-table td {
+            background-color: #f8f9fa;
+        }
+        /* تصميم مؤشر التقدم */
+        .progress-card {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .progress-item {
+            background-color: #d1ecf1;
+            padding: 15px;
+            border-radius: 8px;
+            min-width: 150px;
+            color: #0c5460;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .completed { background-color: #d4edda; color: #155724; }
+        .remaining { background-color: #f8d7da; color: #721c24; }
+        .hours { background-color: #ffc107; color: #856404; }
+        
+        .reminder {
+            background-color: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>مُخطط الدراسة الذكي للطالب</h1>
+
+        <div class="section">
+            <h2>1. إدخال المواد والبيانات</h2>
+            <p>أدخلي اسم المادة/المراجعة وتاريخ امتحانها التقريبي:</p>
+            <input type="text" id="subjectInput" placeholder="اسم المادة (مثال: الفيزياء - الفصل الأول)">
+            <input type="date" id="examDate">
+            <button onclick="addSubject()">أضف مادة/مراجعة</button>
+            
+            <h3>قائمة المواد المُضافة:</h3>
+            <ul id="subjectList" style="list-style-type: disc; padding-right: 20px;">
+                </ul>
+            <button onclick="generatePlan()" style="background-color: #007bff; margin-top: 15px;">توليد الخطة الأسبوعية</button>
+        </div>
+
+        <div class="section">
+            <h2>2. الخطة الأسبوعية والمراجعات (Study Planner)</h2>
+            <div id="reminders" style="margin-bottom: 20px;">
+                <h3>تذكيرات الامتحانات والمراجعات:</h3>
+                </div>
+            
+            <h3>جدول المذاكرة الأسبوعي المُقترح:</h3>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>اليوم</th>
+                        <th>المادة المُقترحة للمذاكرة (3 ساعات)</th>
+                        <th>تم الإنجاز؟</th>
+                    </tr>
+                </thead>
+                <tbody id="weeklyPlanBody">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>3. متتبع التقدم (Progress Tracker)</h2>
+            <div class="progress-card">
+                <div class="progress-item completed">
+                    <div id="completedTasks">0</div>
+                    <div>مهمة مُنجزة</div>
+                </div>
+                <div class="progress-item remaining">
+                    <div id="remainingTasks">0</div>
+                    <div>مهمة مُتبقية</div>
+                </div>
+                <div class="progress-item hours">
+                    <div id="totalHours">0</div>
+                    <div>ساعة مُذاكرة</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // === منطق JavaScript ===
+        let subjects = [];
+        let totalStudyTasks = 0;
+
+        // دالة لإضافة المواد وتواريخ الامتحانات
+        function addSubject() {
+            const subjectInput = document.getElementById('subjectInput');
+            const examDateInput = document.getElementById('examDate');
+            const subjectName = subjectInput.value.trim();
+            const examDate = examDateInput.value;
+
+            if (subjectName === "") {
+                alert("الرجاء إدخال اسم المادة.");
+                return;
+            }
+
+            // إضافة المادة إلى القائمة
+            subjects.push({ name: subjectName, examDate: examDate });
+            
+            // عرضها في قائمة المواد المضافة
+            const list = document.getElementById('subjectList');
+            const listItem = document.createElement('li');
+            
+            let displayDate = examDate ? ` (امتحان: ${new Date(examDate).toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' })})` : '';
+            listItem.textContent = subjectName + displayDate;
+            list.appendChild(listItem);
+
+            // إضافة تذكير الامتحان (إذا كان هناك تاريخ)
+            if (examDate) {
+                addReminder(subjectName, examDate);
+            }
+
+            // تفريغ الحقول
+            subjectInput.value = '';
+            examDateInput.value = '';
+        }
+
+        // دالة لتوليد الخطة الأسبوعية
+        function generatePlan() {
+            if (subjects.length === 0) {
+                alert("الرجاء إضافة بعض المواد أولاً.");
+                return;
+            }
+
+            const days = ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
+            const planBody = document.getElementById('weeklyPlanBody');
+            planBody.innerHTML = ''; // تفريغ الجدول القديم
+            totalStudyTasks = 0;
+
+            // توزيع المواد على الأيام بالتساوي (مادة واحدة كل يوم لمدة 3 ساعات)
+            let subjectIndex = 0;
+            days.forEach((day, dayIndex) => {
+                const row = planBody.insertRow();
+                const subject = subjects[subjectIndex];
+                
+                row.insertCell().textContent = day;
+                row.insertCell().textContent = `${subject.name} (3 ساعات)`;
+                
+                // خلية الإنجاز (Tracking)
+                const taskCell = row.insertCell();
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `task_${dayIndex}`;
+                checkbox.onchange = updateProgress;
+                
+                const label = document.createElement('label');
+                label.htmlFor = `task_${dayIndex}`;
+                label.textContent = 'أنجزت هذه المهمة';
+
+                taskCell.appendChild(checkbox);
+                taskCell.appendChild(label);
+
+                subjectIndex = (subjectIndex + 1) % subjects.length; // الانتقال للمادة التالية
+                totalStudyTasks++;
+            });
+            
+            // تحديث إجمالي المهام في متتبع التقدم
+            document.getElementById('remainingTasks').textContent = totalStudyTasks;
+            document.getElementById('completedTasks').textContent = 0;
+            document.getElementById('totalHours').textContent = 0;
+            
+            alert("تم توليد الخطة الأسبوعية بنجاح!");
+        }
+
+        // دالة لتحديث متتبع التقدم
+        function updateProgress() {
+            let completedCount = 0;
+            let completedHours = 0;
+            
+            // حساب المهام المنجزة
+            document.querySelectorAll('#weeklyPlanBody input[type="checkbox"]').forEach(checkbox => {
+                if (checkbox.checked) {
+                    completedCount++;
+                    completedHours += 3; // كل مهمة تمثل 3 ساعات مذاكرة
+                }
+            });
+
+            // حساب المهام المتبقية
+            const remainingCount = totalStudyTasks - completedCount;
+
+            // تحديث الواجهة
+            document.getElementById('completedTasks').textContent = completedCount;
+            document.getElementById('remainingTasks').textContent = remainingCount;
+            document.getElementById('totalHours').textContent = completedHours;
+        }
+        
+        // دالة لعرض التذكيرات
+        function addReminder(subject, dateString) {
+            const remindersDiv = document.getElementById('reminders');
+            const today = new Date();
+            const examDate = new Date(dateString);
+            const timeDiff = examDate.getTime() - today.getTime();
+            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+            
+            let reminderText;
+            if (daysDiff <= 7 && daysDiff > 0) {
+                reminderText = `لديك امتحان مادة **${subject}** خلال ${daysDiff} أيام. (يجب البدء في المراجعة!)`;
+            } else if (daysDiff === 0) {
+                reminderText = `**اليوم** هو موعد امتحان مادة **${subject}**. بالتوفيق!`;
+            } else if (daysDiff < 0) {
+                reminderText = `امتحان مادة **${subject}** كان بتاريخ ${examDate.toLocaleDateString()}.`;
+            } else {
+                return; // لا تذكير إذا كان الموعد بعيداً جداً
+            }
+            
+            const reminderElement = document.createElement('div');
+            reminderElement.className = 'reminder';
+            reminderElement.innerHTML = reminderText;
+            remindersDiv.appendChild(reminderElement);
+        }
+
+    </script>
+
+</body>
+</html>
